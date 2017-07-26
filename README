@@ -1,0 +1,23 @@
+### tinytet2 ###
+
+A simple ncurses Tetris.
+
+For fun the source code should be limited to 150 SLOC.
+
+Unlike tinytet, this should include:
+
+ - colours
+ - scores
+ - high scores
+ - some config options
+ - next piece display
+
+
+#### Control Keys ####
+
+tt2 uses vim key bindings:
+
+ - 'h' = left
+ - 'j' = down
+ - 'k' = rotate
+ - 'l' = right
