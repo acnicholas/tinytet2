@@ -1,12 +1,14 @@
 VERSION = 0.1
 
 SRC = tt2.c
+PDCURSES ?= PDCurses-3.9
 
-ifdef SYSTEMROOT
+ifeq ($(OS),Windows_NT)
     EXE = tt2.exe
-	LIBS = -lpdcurses
-	RM = rm -f $(EXE)
-	CLOC = cloc-1.56 --quiet
+	LIBS = -L$(PDCURSES)\wincon -l:pdcurses.a 
+	INCLUDE = -I$(PDCURSES)
+	RM = wsl rm -f $(EXE)
+	CLOC = cloc-2.02.exe --quiet
 else
     EXE = tt2
 	LIBS = -lcurses
@@ -14,10 +16,10 @@ else
 	CLOC = cloc --quiet
 endif
 	
-all: sloc tt2
+all: tt2 sloc
 
-tt2: clean
-	gcc $(SRC) $(LIBS) -DVERSION=\"${VERSION}\" -std=c99 -Wall -Wextra -pedantic -Os -o $(EXE)
+tt2:
+	gcc $(SRC) $(LIBS) $(INCLUDE) -DVERSION=\"${VERSION}\" -std=c99 -Wall -Wextra -pedantic -Os -o $(EXE)
 	strip -s -R .comment -R .gnu.version -R .note -R .eh_frame -R .eh_frame_hdr $(EXE)
 
 sloc:

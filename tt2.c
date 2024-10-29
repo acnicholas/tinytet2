@@ -17,7 +17,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "curses.h"
+#include <curses.h>
 #include <sys/timeb.h>
 
 /* width and height of game board, including left, right and bottom borders */
