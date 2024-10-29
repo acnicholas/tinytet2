@@ -1,4 +1,4 @@
-VERSION = 0.1
+VERSION = 1.0
 
 SRC = tt2.c
 PDCURSES ?= PDCurses-3.9

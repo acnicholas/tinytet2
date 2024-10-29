@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
 	int esckey=0, score=0, high=0, start_time=time();
 	tetramino t = {2,0,5}, tmp = {2,0,5}, next = {2,0,5};
 
-	if (argc == 2 && strcmp(argv[1],"-h") == 0){
+	if (argc == 2 && (strcmp(argv[1],"-h") == 0 || strcmp(argv[1],"-v") == 0)){
 		printf("\nTinyTetris2(tt2)\nVersion: %s\nA Nicholas\n",VERSION);
 		return 0;
 	}
