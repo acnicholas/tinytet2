@@ -25,10 +25,13 @@
 #define H 21
 
 /* char to use for each tetramino square */
-#define tmno_gfx ACS_CKBOARD
+/* #define tmno_gfx ACS_CKBOARD */
+#define tmno_gfx ACS_BLOCK
 
-/* key mapping */
-char key_left = 'h', key_right = 'l', key_down = 'j',key_rotate = 'k';
+/* vim key mapping */
+char key_left = 'h', key_right = 'l', key_down = 'j',key_rotate_left = 'k', key_rotate_right = 'i';
+/* wasd key mapping */
+/* char key_left = 'a', key_right = 'd', key_down = 's', key_rotate_left = 'j', key_rotate_right = 'k'; */
 
 /* component locations */
 int gamex = 6, gamey = 0, nextx = 22, nexty = 6;
@@ -51,22 +54,22 @@ typedef struct tetramino {
 	int i; /*grid position*/
 } tetramino;
 
-void draw(tetramino t, tetramino n)
+void draw_tetramino(tetramino t, int draw, int x, int y, int n)
+{
+	draw > 0 ? attron(COLOR_PAIR(t.t + 1)) : attron(COLOR_PAIR(0));
+	for(int i=0; i < 4; i++) {
+		int ti = n < 1 ? t.i + tmnolib[t.t][t.r][i] : W + 5 + tmnolib[t.t][t.r][i];
+		mvaddch(y + ti/W, x + (ti - (ti/W)*W), tmno_gfx);
+	}
+}
+
+void draw_board()
 {
 	for(int i=0; i<W*H; i++) {
 		attron(COLOR_PAIR(grid[i]));
 		if(grid[i] != 0)
 			mvaddch(i/W + gamey, gamex + i - i/W*W,tmno_gfx);
 	}
-	for(int i=0; i < 4; i++) {
-		int ti = t.i + tmnolib[t.t][t.r][i];
-		int ni = W + 5 + tmnolib[n.t][n.r][i];
-		attron(COLOR_PAIR(t.t + 1));
-		mvaddch(gamey + ti/W, (gamex + ti - (ti/W)*W), tmno_gfx);
-		attron(COLOR_PAIR(n.t + 1));
-		mvaddch(ni/W + nexty, nextx + (ni - (ni/W)*W), tmno_gfx);
-	}
-	attrset(0);
 }
 
 /*check for full rows, drop them and return a score */
@@ -79,8 +82,7 @@ int drop_full_rows(tetramino t)
 		for (int c = 0; c < W; c++)
 			if(grid[((ti/W)*W) + c] == 0)
 				full = 0;
-		if(full == 0) 
-			continue;
+		if(full == 0) continue;
 		memmove(&grid[W],&grid[0],((ti)/W) * W * (sizeof(int)));
 		sm++;
 	}
@@ -144,36 +146,51 @@ int main(int argc, const char* argv[])
 		clear();
 		mvprintw(gamey + H + 1,gamex,"score: %d\thigh: %d",score, high);
 		mvprintw(nexty - 2,nextx,"next:");
-		draw(t,next);
+		draw_board();
+		draw_tetramino(next, 1, nextx, nexty, 1);
+		draw_tetramino(t, 1, gamex, gamey, 0);
+	        attrset(0);
 		tmp = t;
 		timeout(20);
 		int key_val = getch();
 
+		/* move tmp tetramino if key pressed */
 		if(key_val == key_right || key_val == KEY_RIGHT)
 			tmp.i++;
 		if(key_val == key_left || key_val == KEY_LEFT)
 			tmp.i--;
-		if(key_val == key_rotate || key_val == KEY_UP)
+		if(key_val == key_rotate_left || key_val == KEY_UP)
 			tmp.r = tmp.r == 3 ? 0 : tmp.r + 1;
+		if(key_val == key_rotate_right)
+			tmp.r = tmp.r == 0 ? 3 : tmp.r - 1;
 		if(key_val == key_down || key_val == KEY_DOWN)
 			tmp.i += W;
 
-		if (grid_free(tmp))
+		/* check if tmp tetramino can be moved to requested location */
+		/* and move the current tetramino if space is clean */
+		if (grid_free(tmp)) {
+			draw_tetramino(t, 0, gamex, gamey, 0); /*  clear old location */
 			t = tmp;
+			draw_tetramino(t, 1, gamex, gamey, 0); /*  draw new */
+		}
 
-		if ((time() - start_time) <=  200/(1 + score/50))
-			continue;
+		/* check for more key pressed is move time has not elapsed */
+		if ((time() - start_time) <=  200/(1 + score/50)) continue;
 
 		start_time=time();
 
+		/* move time has elapsed so try to drop the current tetramino */
 		t.i =  t.i + W;
-		if(grid_free(t))
-			continue;
+		if(grid_free(t)) continue;
 
+		/* drop could not be done so lock down the tetramino; clear
+		 * any full rows and update the score */
 		t.i -= W;
 		for (int i = 0; i < 4; i++)
 			if ((t.i + tmnolib[t.t][t.r][i]) >= 0) grid[t.i + tmnolib[t.t][t.r][i]] = t.t + 1;
 
+		/* Gameover is tetramino location is in the first row */
+		/* Otherwise keep going....*/
 		if(t.i <= W) {
 			if(score > high)
 				rw_highscore(&high, score, "w");
@@ -186,6 +203,8 @@ int main(int argc, const char* argv[])
 			score += drop_full_rows(t);
 		}
 
+		/* assign the next piece to the current tetraomino */
+		/* then get a new next. */
 		t = next;
 		next.t = rand() % 7;
 	}
