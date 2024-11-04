@@ -34,7 +34,7 @@ char key_left = 'h', key_right = 'l', key_down = 'j',key_rotate_left = 'k', key_
 /* char key_left = 'a', key_right = 'd', key_down = 's', key_rotate_left = 'j', key_rotate_right = 'k'; */
 
 /* component locations */
-int gamex = 6, gamey = 0, nextx = 22, nexty = 6;
+int gamex = 16, gamey = 0, nextx = 32, nexty = 6;
 
 int grid[W*H];
 
@@ -54,9 +54,9 @@ typedef struct tetramino {
 	int i; /*grid position*/
 } tetramino;
 
-void draw_tetramino(tetramino t, int draw, int x, int y, int n)
+void draw_tetramino(tetramino t, int x, int y, int n)
 {
-	draw > 0 ? attron(COLOR_PAIR(t.t + 1)) : attron(COLOR_PAIR(0));
+	attron(COLOR_PAIR(t.t + 1));
 	for(int i=0; i < 4; i++) {
 		int ti = n < 1 ? t.i + tmnolib[t.t][t.r][i] : W + 5 + tmnolib[t.t][t.r][i];
 		mvaddch(y + ti/W, x + (ti - (ti/W)*W), tmno_gfx);
@@ -144,12 +144,13 @@ int main(int argc, const char* argv[])
 
 	while(esckey != 27) {
 		clear();
+		attron(COLOR_PAIR(2));
 		mvprintw(gamey + H + 1,gamex,"score: %d\thigh: %d",score, high);
 		mvprintw(nexty - 2,nextx,"next:");
 		draw_board();
-		draw_tetramino(next, 1, nextx, nexty, 1);
-		draw_tetramino(t, 1, gamex, gamey, 0);
-	        attrset(0);
+		draw_tetramino(next, nextx, nexty, 1);
+		draw_tetramino(t, gamex, gamey, 0);
+	        //attrset(0);
 		tmp = t;
 		timeout(20);
 		int key_val = getch();
@@ -168,11 +169,8 @@ int main(int argc, const char* argv[])
 
 		/* check if tmp tetramino can be moved to requested location */
 		/* and move the current tetramino if space is clean */
-		if (grid_free(tmp)) {
-			draw_tetramino(t, 0, gamex, gamey, 0); /*  clear old location */
+		if (grid_free(tmp))
 			t = tmp;
-			draw_tetramino(t, 1, gamex, gamey, 0); /*  draw new */
-		}
 
 		/* check for more key pressed is move time has not elapsed */
 		if ((time() - start_time) <=  200/(1 + score/50)) continue;
@@ -196,12 +194,13 @@ int main(int argc, const char* argv[])
 				rw_highscore(&high, score, "w");
 			score=0;
 			timeout(-1);
-			mvprintw(23,6,"game over! press esc to quit");
+			mvprintw(gamey + H + 3,gamex,"game over! press esc to quit");
 			esckey = getch();
 			initbg();
-		} else {
-			score += drop_full_rows(t);
+			continue;
 		}
+
+		score += drop_full_rows(t);
 
 		/* assign the next piece to the current tetraomino */
 		/* then get a new next. */
