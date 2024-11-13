@@ -124,8 +124,8 @@ int main(int argc, const char* argv[])
 	tetramino t = {2,0,5}, tmp = {2,0,5}, last = {2,0,5}, next = {2,0,5};
 
 	if (argc == 2 && (strcmp(argv[1],"-h") == 0 || strcmp(argv[1],"-v") == 0)){
-		printf("\nTinyTetris2(tt2)\nVersion: %s\nA Nicholas\n",VERSION);
-		return 0;
+		/* return success(0) as the message length below will always be > 0 */
+		return printf("\nTinyTetris2(tt2)\nVersion: %s\nA Nicholas\n",VERSION) < 1;
 	}
 
 	initscr();
@@ -210,8 +210,8 @@ int main(int argc, const char* argv[])
 		next.t = rand() % 7;
 	}
 
-	endwin();
-	return 0;
+    /* returns OK(0) if endwin succeeds. defined in curses.h */
+	return endwin();
 }
 
 /* vim:set noet cindent sts=8 ts=8 sw=8 tw=80: */
