@@ -1,5 +1,5 @@
 /*
- *  (C) Copyright 2015 by Andrew Nicholas
+ *  (C) Copyright 2015-2024 by Andrew Nicholas
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,11 +52,11 @@ typedef struct tetramino {
 	int i; /*grid position*/
 } tetramino;
 
-void draw_tetramino(tetramino t, int x, int y, int n, long unsigned int c)
+void draw_tetramino(tetramino* t, int x, int y, int n, long unsigned int c)
 {
-	attron(COLOR_PAIR(t.t + 1));
+	attron(COLOR_PAIR(t->t + 1));
 	for(int i=0; i < 4; i++) {
-		int ti = n < 1 ? t.i + tmnolib[t.t][t.r][i] : W + 5 + tmnolib[t.t][t.r][i];
+		int ti = n < 1 ? t->i + tmnolib[t->t][t->r][i] : W + 5 + tmnolib[t->t][t->r][i];
 		mvaddch(y + ti/W, x + (ti - (ti/W)*W), c);
 	}
 }
@@ -71,12 +71,12 @@ void draw_board()
 }
 
 /*check for full rows, drop them and return a score */
-int drop_full_rows(tetramino t)
+int drop_full_rows(tetramino* t)
 {
 	int sm = 0;
 	for(int i=0; i<4; i++) {
 		int full = 1;
-		int ti = t.i + tmnolib[t.t][t.r][i];
+		int ti = t->i + tmnolib[t->t][t->r][i];
 		for (int c = 0; c < W; c++)
 			if(grid[((ti/W)*W) + c] == 0)
 				full = 0;
@@ -88,10 +88,10 @@ int drop_full_rows(tetramino t)
 }
 
 /* check if space is available to place a tetramino */
-int grid_free(tetramino t)
+int grid_free(tetramino* t)
 {
 	for (int i = 0; i < 4; i++)
-		if(grid[t.i + tmnolib[t.t][t.r][i]] > 0) return 0;
+		if(grid[t->i + tmnolib[t->t][t->r][i]] > 0) return 0;
 	return 1;
 }
 
@@ -140,17 +140,17 @@ int main(int argc, const char* argv[])
 	keypad(stdscr, TRUE);
 
 	while(esckey != 27) {
-		draw_tetramino(last, gamex, gamey, 0, ' ');
+		draw_tetramino(&last, gamex, gamey, 0, ' ');
 		if (clear_flag == 1){
 			clear();
 			attron(COLOR_PAIR(2));
 			mvprintw(gamey + H + 1,gamex,"score: %d\thigh: %d",score, high);
 			mvprintw(nexty - 2,nextx,"next:");
 			draw_board();
-			draw_tetramino(next, nextx, nexty, 1, tmno_gfx);
+			draw_tetramino(&next, nextx, nexty, 1, tmno_gfx);
 			clear_flag = 0;
 		}
-		draw_tetramino(t, gamex, gamey, 0, tmno_gfx);
+		draw_tetramino(&t, gamex, gamey, 0, tmno_gfx);
 		tmp = last = t;
 		timeout(20);
 		int key_val = getch();
@@ -169,7 +169,7 @@ int main(int argc, const char* argv[])
 
 		/* check if tmp tetramino can be moved to requested location */
 		/* and move the current tetramino if space is clean */
-		if (grid_free(tmp))
+		if (grid_free(&tmp))
 			t = tmp;
 
 		/* check for more key pressed is move time has not elapsed */
@@ -179,7 +179,7 @@ int main(int argc, const char* argv[])
 
 		/* move time has elapsed so try to drop the current tetramino */
 		t.i =  t.i + W;
-		if(grid_free(t)) continue;
+		if(grid_free(&t)) continue;
 
 		clear_flag = 1;
 
@@ -202,7 +202,7 @@ int main(int argc, const char* argv[])
 			continue;
 		}
 
-		score += drop_full_rows(t);
+		score += drop_full_rows(&t);
 
 		/* assign the next piece to the current tetraomino */
 		/* then get a new next. */
